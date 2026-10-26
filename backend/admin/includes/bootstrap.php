@@ -20,6 +20,16 @@ function adminSlugify(string $text): string {
     return trim($text, '-') ?: 'item';
 }
 
+/** Resolve uploads/... or relative paths for admin pages under /admin/. */
+function adminMediaUrl(?string $url): string {
+    $url = trim((string)$url);
+    if ($url === '') return '';
+    if (preg_match('#^(https?:)?//#i', $url) || str_starts_with($url, 'data:') || str_starts_with($url, '/')) {
+        return $url;
+    }
+    return '../' . ltrim($url, '/');
+}
+
 function getSetting(PDO|Database $db, string $key, string $default = ''): string {
     try {
         $row = $db->fetchOne("SELECT setting_value FROM settings WHERE setting_key = ?", [$key]);

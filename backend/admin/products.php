@@ -66,6 +66,27 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'creat
 
 $q = trim($_GET['q'] ?? '');
 $status = $_GET['status'] ?? '';
+$page = max(1, (int)($_GET['page'] ?? 1));
+$perPage = 20;
+
+$where = " WHERE 1=1";
+$params = [];
+if ($q !== '') {
+    $where .= " AND (p.title LIKE ? OR p.handle LIKE ?)";
+    $params[] = "%$q%";
+    $params[] = "%$q%";
+}
+if ($status !== '') {
+    $where .= " AND p.status = ?";
+    $params[] = $status;
+}
+
+$countRow = $db->fetchOne("SELECT COUNT(*) AS c FROM products p" . $where, $params);
+$total = (int)($countRow['c'] ?? 0);
+$totalPages = max(1, (int)ceil($total / $perPage));
+if ($page > $totalPages) $page = $totalPages;
+$offset = ($page - 1) * $perPage;
+
 $sql = "SELECT p.*,
     (SELECT MIN(price) FROM product_variants WHERE product_id = p.id) as min_price,
     (SELECT COUNT(*) FROM product_variants WHERE product_id = p.id) as variant_count,
@@ -73,18 +94,9 @@ $sql = "SELECT p.*,
     c.name as category_name
     FROM products p
     LEFT JOIN categories c ON c.id = p.category_id
-    WHERE 1=1";
-$params = [];
-if ($q !== '') {
-    $sql .= " AND (p.title LIKE ? OR p.handle LIKE ?)";
-    $params[] = "%$q%";
-    $params[] = "%$q%";
-}
-if ($status !== '') {
-    $sql .= " AND p.status = ?";
-    $params[] = $status;
-}
-$sql .= " ORDER BY p.created_at DESC";
+    $where
+    ORDER BY p.created_at DESC
+    LIMIT {$perPage} OFFSET {$offset}";
 $products = $db->fetchAll($sql, $params);
 
 try {
@@ -93,13 +105,22 @@ try {
     $categories = [];
 }
 
+function productsPageUrl(int $page, string $q, string $status): string {
+    $params = [];
+    if ($q !== '') $params['q'] = $q;
+    if ($status !== '') $params['status'] = $status;
+    if ($page > 1) $params['page'] = $page;
+    $qs = http_build_query($params);
+    return 'products.php' . ($qs !== '' ? '?' . $qs : '');
+}
+
 adminLayoutStart('Productos', 'products');
 ?>
 
 <div class="mb-6 flex flex-wrap items-center justify-between gap-4">
     <div>
         <h2 class="text-2xl font-bold">Productos</h2>
-        <p class="text-sm text-gray-400"><?php echo count($products); ?> resultados</p>
+        <p class="text-sm text-gray-400"><?php echo $total; ?> resultados · página <?php echo $page; ?> de <?php echo $totalPages; ?></p>
     </div>
     <button onclick="document.getElementById('createModal').classList.remove('hidden')" class="rounded-lg bg-yellow-500 px-4 py-2 font-bold text-black hover:bg-yellow-400">
         <i class="fas fa-plus mr-2"></i>Nuevo producto
@@ -134,13 +155,18 @@ adminLayoutStart('Productos', 'products');
             <?php if (!$products): ?>
                 <tr><td colspan="6" class="px-4 py-10 text-center text-gray-500">No hay productos</td></tr>
             <?php endif; ?>
-            <?php foreach ($products as $p): ?>
+            <?php foreach ($products as $p):
+                $imgSrc = adminMediaUrl($p['image_url'] ?? '');
+            ?>
                 <tr class="border-t border-gray-800 hover:bg-gray-800/40">
                     <td class="px-4 py-3">
                         <div class="flex items-center gap-3">
                             <div class="h-12 w-12 overflow-hidden rounded-lg bg-gray-800">
-                                <?php if (!empty($p['image_url'])): ?>
-                                    <img src="<?php echo htmlspecialchars($p['image_url']); ?>" class="h-full w-full object-cover" alt="">
+                                <?php if ($imgSrc): ?>
+                                    <img src="<?php echo htmlspecialchars($imgSrc); ?>" class="h-full w-full object-cover" alt="" loading="lazy"
+                                         onerror="this.style.display='none'">
+                                <?php else: ?>
+                                    <div class="grid h-full w-full place-items-center text-[10px] text-gray-600">N/A</div>
                                 <?php endif; ?>
                             </div>
                             <div>
@@ -166,6 +192,40 @@ adminLayoutStart('Productos', 'products');
         </tbody>
     </table>
 </div>
+
+<?php if ($totalPages > 1): ?>
+<nav class="mt-6 flex flex-wrap items-center justify-center gap-2" aria-label="Paginación">
+    <?php if ($page > 1): ?>
+        <a href="<?php echo htmlspecialchars(productsPageUrl($page - 1, $q, $status)); ?>"
+           class="rounded-lg border border-yellow-500/30 px-3 py-2 text-sm text-yellow-500 hover:bg-yellow-500/10">Anterior</a>
+    <?php else: ?>
+        <span class="rounded-lg border border-gray-800 px-3 py-2 text-sm text-gray-600">Anterior</span>
+    <?php endif; ?>
+
+    <?php
+    $window = 2;
+    for ($i = 1; $i <= $totalPages; $i++):
+        if ($i === 1 || $i === $totalPages || ($i >= $page - $window && $i <= $page + $window)):
+    ?>
+        <a href="<?php echo htmlspecialchars(productsPageUrl($i, $q, $status)); ?>"
+           class="min-w-9 rounded-lg border px-3 py-2 text-center text-sm <?php echo $i === $page ? 'border-yellow-500 bg-yellow-500/15 font-bold text-yellow-500' : 'border-gray-700 text-gray-300 hover:border-yellow-500/40'; ?>">
+            <?php echo $i; ?>
+        </a>
+    <?php
+        elseif ($i === $page - $window - 1 || $i === $page + $window + 1):
+            echo '<span class="px-1 text-gray-600">…</span>';
+        endif;
+    endfor;
+    ?>
+
+    <?php if ($page < $totalPages): ?>
+        <a href="<?php echo htmlspecialchars(productsPageUrl($page + 1, $q, $status)); ?>"
+           class="rounded-lg border border-yellow-500/30 px-3 py-2 text-sm text-yellow-500 hover:bg-yellow-500/10">Siguiente</a>
+    <?php else: ?>
+        <span class="rounded-lg border border-gray-800 px-3 py-2 text-sm text-gray-600">Siguiente</span>
+    <?php endif; ?>
+</nav>
+<?php endif; ?>
 
 <div id="createModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/60 p-4" style="display:none" onclick="if(event.target===this){this.style.display='none';this.classList.add('hidden')}">
     <div class="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-2xl border border-gray-700 bg-gray-900 p-6" onclick="event.stopPropagation()">
@@ -218,7 +278,7 @@ adminLayoutStart('Productos', 'products');
             </div>
             <div>
                 <label class="mb-1 block text-xs text-gray-400">URL imagen</label>
-                <input name="image_url" placeholder="https://..." class="w-full rounded-lg border border-gray-700 bg-gray-800 px-3 py-2">
+                <input name="image_url" placeholder="uploads/products/... o https://..." class="w-full rounded-lg border border-gray-700 bg-gray-800 px-3 py-2">
             </div>
             <div class="flex gap-2 pt-2">
                 <button class="flex-1 rounded-lg bg-yellow-500 py-2 font-bold text-black">Crear</button>

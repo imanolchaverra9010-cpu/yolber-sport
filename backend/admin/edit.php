@@ -217,7 +217,7 @@ adminLayoutStart('Editar producto', 'products');
             <div class="mb-4 grid grid-cols-2 gap-3">
                 <?php foreach ($images as $im): ?>
                     <div class="relative overflow-hidden rounded-xl border border-gray-800">
-                        <img src="<?php echo htmlspecialchars($im['url']); ?>" class="aspect-square w-full object-cover" alt="">
+                        <img src="<?php echo htmlspecialchars(adminMediaUrl($im['url'] ?? '')); ?>" class="aspect-square w-full object-cover" alt="">
                         <a href="edit.php?id=<?php echo $productId; ?>&delete_image=<?php echo (int)$im['id']; ?>" onclick="return confirm('¿Eliminar imagen?')" class="absolute right-2 top-2 rounded bg-black/70 px-2 py-1 text-xs text-red-300">✕</a>
                     </div>
                 <?php endforeach; ?>
