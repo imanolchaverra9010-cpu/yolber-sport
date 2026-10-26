@@ -139,8 +139,59 @@ adminLayoutStart('Productos', 'products');
     <button class="rounded-lg border border-gray-700 px-4 py-2 text-sm hover:bg-gray-800">Filtrar</button>
 </form>
 
-<div class="overflow-hidden rounded-2xl border border-gray-800 bg-gray-900">
-    <table class="w-full text-sm">
+<?php if (!$products): ?>
+    <div class="rounded-2xl border border-dashed border-gray-800 px-4 py-10 text-center text-gray-500">No hay productos</div>
+<?php else: ?>
+
+<!-- Mobile cards: acciones siempre visibles -->
+<div class="space-y-3 md:hidden">
+    <?php foreach ($products as $p):
+        $imgSrc = adminMediaUrl($p['image_url'] ?? '');
+        $pid = (int)$p['id'];
+    ?>
+        <article class="rounded-2xl border border-gray-800 bg-gray-900 p-3">
+            <div class="flex gap-3">
+                <div class="h-16 w-16 flex-shrink-0 overflow-hidden rounded-xl bg-gray-800">
+                    <?php if ($imgSrc): ?>
+                        <img src="<?php echo htmlspecialchars($imgSrc); ?>" class="h-full w-full object-cover" alt="" loading="lazy"
+                             onerror="this.style.display='none'">
+                    <?php else: ?>
+                        <div class="grid h-full w-full place-items-center text-[10px] text-gray-600">N/A</div>
+                    <?php endif; ?>
+                </div>
+                <div class="min-w-0 flex-1">
+                    <p class="truncate font-medium"><?php echo htmlspecialchars($p['title']); ?></p>
+                    <p class="truncate text-xs text-gray-500"><?php echo htmlspecialchars($p['handle']); ?></p>
+                    <div class="mt-1 flex flex-wrap items-center gap-2 text-xs text-gray-400">
+                        <span><?php echo htmlspecialchars($p['category_name'] ?? '—'); ?></span>
+                        <span class="text-gray-600">·</span>
+                        <span class="font-bold text-yellow-500">$<?php echo number_format($p['min_price'] ?? 0, 0, ',', '.'); ?></span>
+                        <span class="text-gray-600">·</span>
+                        <span><?php echo (int)$p['variant_count']; ?> var.</span>
+                        <span class="rounded-full px-2 py-0.5 <?php echo $p['status'] === 'active' ? 'bg-green-500/15 text-green-400' : 'bg-gray-700 text-gray-300'; ?>">
+                            <?php echo htmlspecialchars($p['status']); ?>
+                        </span>
+                    </div>
+                </div>
+            </div>
+            <div class="mt-3 grid grid-cols-2 gap-2">
+                <a href="edit.php?id=<?php echo $pid; ?>"
+                   class="inline-flex items-center justify-center gap-2 rounded-lg bg-blue-500/15 px-3 py-2.5 text-sm font-semibold text-blue-400">
+                    <i class="fas fa-pen text-xs"></i> Editar
+                </a>
+                <a href="products.php?delete=<?php echo $pid; ?>"
+                   onclick="return confirm('¿Eliminar producto?')"
+                   class="inline-flex items-center justify-center gap-2 rounded-lg bg-red-500/15 px-3 py-2.5 text-sm font-semibold text-red-400">
+                    <i class="fas fa-trash text-xs"></i> Eliminar
+                </a>
+            </div>
+        </article>
+    <?php endforeach; ?>
+</div>
+
+<!-- Desktop table -->
+<div class="hidden overflow-x-auto rounded-2xl border border-gray-800 bg-gray-900 md:block">
+    <table class="w-full min-w-[720px] text-sm">
         <thead class="bg-gray-800 text-left text-gray-400">
             <tr>
                 <th class="px-4 py-3">Producto</th>
@@ -148,15 +199,13 @@ adminLayoutStart('Productos', 'products');
                 <th class="px-4 py-3">Precio</th>
                 <th class="px-4 py-3">Variantes</th>
                 <th class="px-4 py-3">Estado</th>
-                <th class="px-4 py-3">Acciones</th>
+                <th class="sticky right-0 bg-gray-800 px-4 py-3">Acciones</th>
             </tr>
         </thead>
         <tbody>
-            <?php if (!$products): ?>
-                <tr><td colspan="6" class="px-4 py-10 text-center text-gray-500">No hay productos</td></tr>
-            <?php endif; ?>
             <?php foreach ($products as $p):
                 $imgSrc = adminMediaUrl($p['image_url'] ?? '');
+                $pid = (int)$p['id'];
             ?>
                 <tr class="border-t border-gray-800 hover:bg-gray-800/40">
                     <td class="px-4 py-3">
@@ -183,15 +232,17 @@ adminLayoutStart('Productos', 'products');
                             <?php echo htmlspecialchars($p['status']); ?>
                         </span>
                     </td>
-                    <td class="px-4 py-3">
-                        <a href="edit.php?id=<?php echo (int)$p['id']; ?>" class="mr-3 text-blue-400 hover:text-blue-300">Editar</a>
-                        <a href="products.php?delete=<?php echo (int)$p['id']; ?>" onclick="return confirm('¿Eliminar producto?')" class="text-red-400 hover:text-red-300">Eliminar</a>
+                    <td class="sticky right-0 bg-gray-900 px-4 py-3 whitespace-nowrap">
+                        <a href="edit.php?id=<?php echo $pid; ?>" class="mr-3 text-blue-400 hover:text-blue-300">Editar</a>
+                        <a href="products.php?delete=<?php echo $pid; ?>" onclick="return confirm('¿Eliminar producto?')" class="text-red-400 hover:text-red-300">Eliminar</a>
                     </td>
                 </tr>
             <?php endforeach; ?>
         </tbody>
     </table>
 </div>
+
+<?php endif; ?>
 
 <?php if ($totalPages > 1): ?>
 <nav class="mt-6 flex flex-wrap items-center justify-center gap-2" aria-label="Paginación">
