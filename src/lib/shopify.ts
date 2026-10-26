@@ -39,11 +39,25 @@ class ApiError extends Error {
   }
 }
 
+function apiCredentialsMode(): RequestCredentials {
+  // Cross-origin (Vercel → Hostinger) cannot use credentials with ACAO "*".
+  // Cart is local-first; cookies across sites are not required for the catalog.
+  try {
+    const apiOrigin = new URL(API_BASE_URL, typeof window !== "undefined" ? window.location.href : "http://localhost").origin;
+    if (typeof window !== "undefined" && apiOrigin !== window.location.origin) {
+      return "omit";
+    }
+  } catch {
+    /* ignore */
+  }
+  return "include";
+}
+
 async function apiRequest(endpoint: string, options: RequestInit = {}) {
   const url = `${API_BASE_URL}${endpoint}`;
   const response = await fetch(url, {
     ...options,
-    credentials: "include",
+    credentials: options.credentials ?? apiCredentialsMode(),
     headers: {
       "Content-Type": "application/json",
       ...options.headers,
