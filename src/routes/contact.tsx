@@ -38,7 +38,7 @@ function Contact() {
                 </div>
                 <div>
                   <h3 className="font-semibold text-white mb-1">WhatsApp</h3>
-                  <p className="text-muted-foreground">+57 300 000 0000</p>
+                  <p className="text-muted-foreground">+573207885337</p>
                   <a
                     href={`https://wa.me/${whatsappPhone}`}
                     target="_blank"
