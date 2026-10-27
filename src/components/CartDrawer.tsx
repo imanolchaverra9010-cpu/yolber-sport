@@ -24,7 +24,7 @@ export function CartDrawer() {
   const total = items.reduce((s, i) => s + parseFloat(i.price.amount) * i.quantity, 0);
   const currency = items[0]?.price.currencyCode || "COP";
 
-  const whatsappPhone = import.meta.env.VITE_WHATSAPP_PHONE || "573000000000";
+  const whatsappPhone = import.meta.env.VITE_WHATSAPP_PHONE || "573207885337";
 
   useEffect(() => {
     if (!open) {

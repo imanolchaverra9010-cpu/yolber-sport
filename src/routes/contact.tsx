@@ -14,7 +14,7 @@ export const Route = createFileRoute("/contact")({
 });
 
 function Contact() {
-  const whatsappPhone = import.meta.env.VITE_WHATSAPP_PHONE || "573000000000";
+  const whatsappPhone = import.meta.env.VITE_WHATSAPP_PHONE || "573207885337";
 
   return (
     <main>

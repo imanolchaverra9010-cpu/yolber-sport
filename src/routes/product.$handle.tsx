@@ -45,7 +45,7 @@ function ProductPage() {
   const [wishlisted, setWishlisted] = useState(false);
   const addItem = useCartStore((s) => s.addItem);
   const adding = useCartStore((s) => s.isLoading);
-  const whatsappPhone = import.meta.env.VITE_WHATSAPP_PHONE || "573000000000";
+  const whatsappPhone = import.meta.env.VITE_WHATSAPP_PHONE || "573207885337";
 
   useEffect(() => {
     setVariantIdx(0);
