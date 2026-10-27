@@ -5,6 +5,7 @@ import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTr
 import { ShoppingBag, Minus, Plus, Trash2, MessageCircle, Loader2, ArrowLeft } from "lucide-react";
 import { useCartStore, type CheckoutCustomer } from "@/stores/cartStore";
 import { formatPrice } from "@/lib/shopify";
+import { useWhatsAppPhone } from "@/lib/whatsapp";
 
 const emptyCustomer: CheckoutCustomer = {
   name: "",
@@ -24,7 +25,7 @@ export function CartDrawer() {
   const total = items.reduce((s, i) => s + parseFloat(i.price.amount) * i.quantity, 0);
   const currency = items[0]?.price.currencyCode || "COP";
 
-  const whatsappPhone = import.meta.env.VITE_WHATSAPP_PHONE || "573207885337";
+  const { phone: whatsappPhone } = useWhatsAppPhone();
 
   useEffect(() => {
     if (!open) {

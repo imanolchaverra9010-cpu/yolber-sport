@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { Mail, Phone, MapPin, Send } from "lucide-react";
+import { useWhatsAppPhone } from "@/lib/whatsapp";
 
 export const Route = createFileRoute("/contact")({
   head: () => ({
@@ -14,7 +15,7 @@ export const Route = createFileRoute("/contact")({
 });
 
 function Contact() {
-  const whatsappPhone = import.meta.env.VITE_WHATSAPP_PHONE || "573207885337";
+  const { phone: whatsappPhone, display, href } = useWhatsAppPhone();
 
   return (
     <main>
@@ -38,9 +39,9 @@ function Contact() {
                 </div>
                 <div>
                   <h3 className="font-semibold text-white mb-1">WhatsApp</h3>
-                  <p className="text-muted-foreground">+57 300 000 0000</p>
+                  <p className="text-muted-foreground">{display || `+${whatsappPhone}`}</p>
                   <a
-                    href={`https://wa.me/${whatsappPhone}`}
+                    href={href}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="text-gold hover:text-gold/80 text-sm mt-1 inline-block"
@@ -56,7 +57,7 @@ function Contact() {
                 </div>
                 <div>
                   <h3 className="font-semibold text-white mb-1">Email</h3>
-                  <p className="text-muted-foreground">info@yobersport.com</p>
+                  <p className="text-muted-foreground">info@yolbersport.com</p>
                 </div>
               </div>
 
@@ -111,7 +112,7 @@ function Contact() {
               </div>
               <button
                 type="button"
-                onClick={() => window.open(`https://wa.me/${whatsappPhone}`, "_blank")}
+                onClick={() => window.open(href, "_blank")}
                 className="w-full bg-gold text-black font-bold py-3 rounded hover:bg-gold/90 transition flex items-center justify-center gap-2"
               >
                 <Send className="h-4 w-4" />

@@ -17,6 +17,7 @@ import { fetchProduct, fetchProducts, formatPrice } from "@/lib/shopify";
 import { useCartStore } from "@/stores/cartStore";
 import { ProductCard } from "@/components/ProductCard";
 import { cn } from "@/lib/utils";
+import { useWhatsAppPhone } from "@/lib/whatsapp";
 
 export const Route = createFileRoute("/product/$handle")({
   head: ({ params }) => ({
@@ -45,7 +46,7 @@ function ProductPage() {
   const [wishlisted, setWishlisted] = useState(false);
   const addItem = useCartStore((s) => s.addItem);
   const adding = useCartStore((s) => s.isLoading);
-  const whatsappPhone = import.meta.env.VITE_WHATSAPP_PHONE || "573207885337";
+  const { phone: whatsappPhone, href: whatsappHref } = useWhatsAppPhone();
 
   useEffect(() => {
     setVariantIdx(0);
@@ -358,7 +359,7 @@ function ProductPage() {
       </div>
 
       <a
-        href={`https://wa.me/${whatsappPhone}`}
+        href={whatsappHref}
         target="_blank"
         rel="noopener noreferrer"
         aria-label="WhatsApp"
